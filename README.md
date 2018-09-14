@@ -1,4 +1,4 @@
-# localupdaterepository
+## Setting up multi distro local repository on ubuntu
 ### Script to create local update repositories for multiple linux distribution
 
 
