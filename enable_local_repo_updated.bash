@@ -2,10 +2,7 @@
 ###########################  ALWAYS RUN THIS SCRIPT AS ROOT  ###########################
 #This script enables any local repositories on the host. 
 #For this to work, one must supply the fully qualified domain name of the repo server
-# Note: Update local_repo_fqdn variable. for e.g. if your repo server fqdn is example.aws.amazon.com then change
-# local_repo_fqdn=example.aws.amazon.com
 # 
-#Usage: This scipt can directly be passed to RUN utility in SSM. 
 #
 ###########################  ALWAYS RUN THIS SCRIPT AS ROOT  ###########################
 
@@ -18,8 +15,8 @@ function error_exit
   exit 1
 }
 
-#I have hardcoded the fqdn here. Change if this fqdn chagnes
-local_repo_fqdn="ec2-18-206-162-221.compute-1.amazonaws.com"
+local_repo_fqdn=$1
+#local_repo_fqdn=""
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 OS=""
 
