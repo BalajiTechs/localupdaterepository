@@ -19,13 +19,8 @@
 cur_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 tmp_dir="/tmp/local_repo_tmp"
 
-#We need amzn2-core repo_url to fetch repodata from. To get this url by running below commands as root user on AL2 instance
-# mirrorlist=$(grep -m1 -F mirrorlist /etc/yum.repos.d/amzn-core.repo)
-# mirrorurl=$(echo $mirrorlist|sed -e s/\$releasever/latest/g|cut -f2 -d=)
-# baseurl=$(curl -s $mirrorurl|head -n1)
-# echo $baseurl
-#Here i have hardcoded the url i got from one of the base AL2 instance
-amzn2_repo_base_url="http://amazonlinux.us-east-1.amazonaws.com/2/core/2.0/x86_64/cc59cb59961f7a2deda5cd28f9db3b1a8fb2a98453c27110a310e8413f7ee6c6"
+#We need amzn2-core repo_url to fetch repodata from.
+amzn2_repo_base_url="http://example.com/amzn2-core/os/x86/"
 
 #create temp directory for all the needs
 mkdir -p $tmp_dir
@@ -151,7 +146,7 @@ EOL
 	cat >> $tmp_dir/repo_sync << EOL
 #!/bin/bash
 # Sync Amazon Linux 2 repos
-reposync -c /etc/yum/yum.conf --repoid=amzn2-core --downloadcomps --download-metadata --download_path=$amazon_mirror_dir
+reposync -c /etc/yum/yum.conf --repoid=$amazon_repo_name --downloadcomps --download-metadata --download_path=$amazon_mirror_dir
 
 #create link from blobstore to packages. This is because the RPM pacakges are being copied to blobstore folder. 
 #Why? May be a desgin strategy of aws guys to keep repo directory clean
