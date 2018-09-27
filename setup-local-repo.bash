@@ -15,12 +15,13 @@
 # ./setup-local-repo.bash <base_dir> e.g. ./setup-local-repo.bash /data/repo_base/
 ########################################################################################
 
-
+#local_repo_fqdn=`curl http://169.254.169.254/latest/meta-data/public-hostname`
+local_repo_fqdn=`hostname -f`
 cur_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 tmp_dir="/tmp/local_repo_tmp"
 
 #We need amzn2-core repo_url to fetch repodata from.
-amzn2_repo_base_url="http://example.com/amzn2-core/os/x86/"
+amzn_linux2_repo_base_url="http://example.com/amzn2-core/os/x86/"
 
 #create temp directory for all the needs
 mkdir -p $tmp_dir
@@ -83,7 +84,7 @@ function setup_apt_repository
 	
 	mkdir -v -p $apt_mirror_dir	
 	mv -v  /etc/apt/mirror.list /etc/apt/mirror.list_bkp 
-	ln -s $apt_mirror_dir/mirror/archive.ubuntu.com/ubuntu/ /var/www/ubuntu
+	ln -s $apt_mirror_dir/mirror/archive.ubuntu.com/ubuntu /var/www/ubuntu
 	echo "Creating mirror list of only essential repos"
 	cat > /etc/apt/mirror.list << EOL
 set base_path $apt_mirror_dir
@@ -131,13 +132,13 @@ function setup_amazon_linux_2_repository
 	amazon_repo_name=amzn2-core
 	echo "Setting up yum mirror for amazon linux 2 repo in $repo_base"
 	
-	mkdir -p $amzn_mirror_dir
-	ln -s $amzn_mirror_dir /var/www/amzn2
+	mkdir -p $amazon_mirror_dir
+	ln -s $amazon_mirror_dir /var/www/amzn2
 	
 	cat > /etc/yum/repos.d/amzn.repo << EOL
 [$amazon_repo_name]
 name=Amazon Linux 2 core repository
-baseurl=$amzn2_repo_base_url
+baseurl=$amzn_linux2_repo_base_url
 gpgcheck=0
 report_instanceid=no
 EOL
@@ -171,7 +172,7 @@ function setup_centos_repository
 {
 	echo "Setting up yum mirror repo in $repo_base"
 	
-	mkdir -p $centos_os_mirror_dir $ centos_extras_mirror_dir $centos_updates_mirror_dir
+	mkdir -p $centos_os_mirror_dir $centos_extras_mirror_dir $centos_updates_mirror_dir
 	ln -s $centos_mirror_dir /var/www/centos
 	
 	#This scripts generate updateinfo.xml file from xml file containing the errata and advistory information
@@ -298,3 +299,4 @@ setup_amazon_linux_2_repository
 setup_suse_repository
 setup_rsync_mirror_cron
 setup_nginx
+print_details
