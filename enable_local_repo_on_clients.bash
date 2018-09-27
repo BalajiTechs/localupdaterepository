@@ -127,7 +127,7 @@ function enable_zypper_repo
 	echo "moving and enable smt services to /var/tmp"
 	mv /etc/zypp/services.d/*.service /var/tmp/
 	echo "adding our own zypper repo"
-	zypper ar http://$local_repo_fqdn/zypper/base/ local-suse-repo
+	zypper ar http://$local_repo_fqdn/zypper local-suse-repo
 	
 	#now due to vendor stickyness in zypper we have to add a specific line in zypp.conf files
 	# See https://en.opensuse.org/SDB:Vendor_change_update
