@@ -15,6 +15,10 @@ function error_exit
   exit 1
 }
 
+if [[ $1 = "" ]]; then
+   error_exit
+fi
+
 local_repo_fqdn=$1
 #local_repo_fqdn=""
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -60,19 +64,19 @@ function enable_yum_repo
 ####local-yum-repo#####
 [base]
 name=CentOS-Base
-baseurl=http://$local_repo_fqdn/centos/7/os/x86_64/
+baseurl=http://$local_repo_fqdn/centos/os/x86_64/
 gpgcheck=0
 
 #released updates
 [updates]
 name=CentOS-Updates
-baseurl=http://$local_repo_fqdn/centos/7/updates/x86_64/
+baseurl=http://$local_repo_fqdn/centos/updates/x86_64/
 gpgcheck=0
 
 #additional packages that may be useful
 [extras]
 name=CentOS-Extras
-baseurl=http://$local_repo_fqdn/centos/7/extras/x86_64/
+baseurl=http://$local_repo_fqdn/centos/extras/x86_64/
 gpgcheck=0
 EOL
 echo "-----------------------------------------------------------"	
