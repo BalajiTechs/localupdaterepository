@@ -35,7 +35,7 @@ function enable_amzn_repo
 ####local-amzn-core repo#####
 [amzn2-core-local]
 name=Amazon Linux 2 core repository
-baseurl=http://$local_repo_fqdn/amzn2/
+baseurl=http://$local_repo_fqdn/amzn2/amzn2-core
 gpgcheck=0
 enabled=1
 report_instanceid=no
