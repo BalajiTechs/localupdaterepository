@@ -145,7 +145,6 @@ EOL
 
 #add above repo to sync in repo_sync file
 	cat >> $tmp_dir/repo_sync << EOL
-#!/bin/bash
 # Sync Amazon Linux 2 repos
 reposync -c /etc/yum/yum.conf --repoid=$amazon_repo_name --downloadcomps --download-metadata --download_path=$amazon_mirror_dir
 
