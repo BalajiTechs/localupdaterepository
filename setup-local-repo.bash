@@ -20,18 +20,17 @@ local_repo_fqdn=`hostname -f`
 cur_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 tmp_dir="/tmp/local_repo_tmp"
 
-#We need amzn2-core repo_url to fetch repodata from.
-amzn_linux2_repo_base_url="http://example.com/amzn2-core/os/x86/"
+#We also need suse12 repo url
+suse12_update_mirror_url="http://download.opensuse.org/update/leap/15.0/oss/"
 
 #create temp directory for all the needs
 mkdir -p $tmp_dir
-
 
 #We cannot procceed unless we have repo base dir
 function error_exit
 {
   echo "$1" 1>&2
-  echo "Usage: ./createrepo-ubuntu.bash <repo base directory>" 1>&2
+  echo "Usage: ./$0 <repo base directory>" 1>&2
   exit 1
 }
 
@@ -49,7 +48,6 @@ centos_mirror_dir=$repo_base/yum-mirror/centos
 centos_os_mirror_dir=$centos_mirror_dir/os/x86_64
 centos_updates_mirror_dir=$centos_mirror_dir/updates/x86_64
 centos_extras_mirror_dir=$centos_mirror_dir/extras/x86_64
-amazon_mirror_dir=$repo_base/yum-mirror/amzon.local
 
 #this should be either static or a regex so that even if fqdn changes we no need to restart nginx again
 #nginx_server_name=
@@ -109,61 +107,30 @@ EOL
 	
 }
 
-
 function setup_suse_repository
 {
 	echo "Setting up zypper mirror in $repo_base"
 
-	mkdir -v -p $suse_mirror_dir/base
+	mkdir -v -p $suse_mirror_dir
 	ln -s $suse_mirror_dir /var/www/zypper
-	cat >> $tmp_dir/repo_sync << EOL
-#sync opensuse repos here
-rsync -rlpt rsync.opensuse.org::opensuse-updates $suse_mirror_dir --delete-after -hi --stats
 
-#create repo database
-createrepo --update --workers=4 $suse_mirror_dir/base
-EOL
-}
-
-
-function setup_amazon_linux_2_repository
-{
-	#This is the same name that comes preconfigured with amazon-linux2 base AMI
-	amazon_repo_name=amzn2-core
-	echo "Setting up yum mirror for amazon linux 2 repo in $repo_base"
-	
-	mkdir -p $amazon_mirror_dir
-	ln -s $amazon_mirror_dir /var/www/amzn2
-	
-	cat > /etc/yum/repos.d/amzn.repo << EOL
-[$amazon_repo_name]
-name=Amazon Linux 2 core repository
-baseurl=$amzn_linux2_repo_base_url
+#Suse repo is yum based repo. so we can configure the same as we have done for centos or AmazonLinux2
+	cat >> /etc/yum.repos.d/opensuse.repo << EOL
+[suse12-update]
+#OpenSUSE Leap 15 is equvalent to SLES/SUSE 12
+name=Suse12 Update Repository
+baseurl=$suse12_update_mirror_url
 gpgcheck=0
 report_instanceid=no
 EOL
 
-#add above repo to sync in repo_sync file
 	cat >> $tmp_dir/repo_sync << EOL
-# Sync Amazon Linux 2 repos
-reposync -c /etc/yum/yum.conf --repoid=$amazon_repo_name --downloadcomps --download-metadata --download_path=$amazon_mirror_dir
-
-#create link from blobstore to packages. This is because the RPM pacakges are being copied to blobstore folder. 
-#Why? May be a desgin strategy of aws guys to keep repo directory clean
-#We must either manually move all rpms to current directory ($amazon_mirror_dir) or create a soft link to blobstore 
-#where all packages are downloaded. The name must be Packages otherwise createrepo will not be able to locate the RPMs.
-ln -s /blobstore $amazon_mirror_dir/$amazon_repo_name/Packages
-
-#Createrepo expects packages in current_directory/Packages_directory_in_current_directory/specific directory with -p flag
-# Build Amazon Linux 2 metadata
-createrepo -g $amazon_mirror_dir/$amazon_repo_name/comps.xml --update --workers=4 $amazon_mirror_dir/$amazon_repo_name/
-
-#unzip the updateinfo file
-cd  $amazon_mirror_dir/$amazon_repo_name;gunzip *updateinfo.xml.gz
-	
-#update updateinfo.xml file
-mv $amazon_mirror_dir/$amazon_repo_name/*updateinfo.xml $amazon_mirror_dir/$amazon_repo_name/repodata/updateinfo.xml
-modifyrepo $amazon_mirror_dir/$amazon_repo_name/repodata/updateinfo.xml $amazon_mirror_dir/$amazon_repo_name/repodata
+#sync opensuse repos here
+reposync -c /etc/yum/yum.conf -n -d -g comps.xml --download-metadata --norepopath -r suse12-update --download_path=$suse_mirror_dir
+#create repo database
+createrepo -v --update --workers=4 $suse_mirror_dir
+cd  $suse_mirror_dir;gunzip *updateinfo.xml.gz;mv *updateinfo.xml repodata/
+modify $suse_mirror_dir/repodata/*updateinfo.xml $suse_mirror_dir/repodata
 EOL
 }
 
@@ -278,9 +245,6 @@ echo -e "\t\tUbuntu : http://$local_repo_fqdn/ubuntu"
 echo "-----------------------------------------------------------------------------------------------"
 echo "\t\tCentOS/RHEL : http://$local_repo_fqdn/centos"
 echo "-----------------------------------------------------------------------------------------------"
-echo "-----------------------------------------------------------------------------------------------"
-echo "\t\tAmazonLinx2 : http://$local_repo_fqdn/amzn2"
-echo "-----------------------------------------------------------------------------------------------"
 echo "\t\tSLES/SUSE : http://$local_repo_fqdn/zypper"
 echo "-----------------------------------------------------------------------------------------------"
 
@@ -292,7 +256,6 @@ echo "--------------------------------------------------------------------------
 install_deps
 setup_apt_repository
 setup_centos_repository
-setup_amazon_linux_2_repository
 #Creating mirror for RHEL require active subscription to that repo. rhel clients will sync from centos only.
 #setup_rhel_repository 
 setup_suse_repository
